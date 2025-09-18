@@ -2402,15 +2402,9 @@ ${conversationHistory}
                             
                             <div className="flex gap-3">
                                 <button
-                                    onClick={() => setShowApiSettings(!showApiSettings)}
-                                    className="flex-1 py-3 px-6 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
-                                >
-                                    API設定
-                                </button>
-                                <button
                                     onClick={startGame}
                                     disabled={!apiTested || isGeneratingPersona}
-                                    className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all transform ${
+                                    className={`w-full py-3 px-6 rounded-lg font-medium transition-all transform ${
                                         apiTested && !isGeneratingPersona
                                             ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 hover:scale-105' 
                                             : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -2420,8 +2414,15 @@ ${conversationHistory}
                                 </button>
                             </div>
                             
-                            {showApiSettings && (
-                                <div className="p-4 bg-gray-50 rounded-lg space-y-3 fade-in">
+                        </div>
+                    </div>
+                    
+                    {/* API設定モーダル */}
+                    {showApiSettings && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 fade-in">
+                            <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+                                <h2 className="text-xl font-bold mb-4">API設定</h2>
+                                <div className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium mb-1">OpenRouter APIキー</label>
                                         <input
@@ -2429,7 +2430,7 @@ ${conversationHistory}
                                             value={apiKey}
                                             onChange={(e) => {
                                                 setApiKey(e.target.value);
-                                                setApiTested(false); // APIキーが変更されたらテスト状態をリセット
+                                                setApiTested(false);
                                             }}
                                             placeholder="sk-or-..."
                                             className="w-full p-2 border rounded focus:border-purple-500 focus:outline-none"
@@ -2441,7 +2442,7 @@ ${conversationHistory}
                                             value={apiModel}
                                             onChange={(e) => {
                                                 setApiModel(e.target.value);
-                                                setApiTested(false); // モデルが変更されたらテスト状態をリセット
+                                                setApiTested(false);
                                             }}
                                             className="w-full p-2 border rounded focus:border-purple-500 focus:outline-none"
                                         >
@@ -2465,9 +2466,12 @@ ${conversationHistory}
                                             {apiTesting ? 'テスト中...' : apiTested ? '✓ 接続成功' : 'APIをテスト'}
                                         </button>
                                         {apiTested && (
-                                            <span className="text-green-600 text-sm font-medium">
-                                                ✓ 準備完了
-                                            </span>
+                                            <button
+                                                onClick={() => setShowApiSettings(false)}
+                                                className="py-2 px-4 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                                            >
+                                                閉じる
+                                            </button>
                                         )}
                                     </div>
                                     {!apiTested && (
@@ -2476,9 +2480,9 @@ ${conversationHistory}
                                         </p>
                                     )}
                                 </div>
-                            )}
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             );
             
