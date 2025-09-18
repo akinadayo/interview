@@ -882,44 +882,14 @@
                 { id: 'hobby', title: '趣味・娯楽', icon: '🎮' }
             ];
             
-            // ペインポイント生成関数
-            const generatePainPoints = useCallback(async (category) => {
+            // ペインポイント生成関数（リトライ機能付き）
+            const generatePainPoints = useCallback(async (category, retryCount = 0) => {
                 if (!apiKey || !apiTested) {
-                    // APIが利用できない場合はプリセットを返す
-                    const presets = {
-                        commute: [
-                            'バスに乗るのが苦手で困っている',
-                            '満員電車でのストレスが耐えられない',
-                            '駐車場が見つからずいつも遅刻しそうになる'
-                        ],
-                        work: [
-                            'オンライン会議で発言するタイミングが掴めない',
-                            'メールの返信が溜まってしまい管理できない',
-                            '集中力が続かず仕事が終わらない'
-                        ],
-                        life: [
-                            '料理のレパートリーが少なく家族に申し訳ない',
-                            '掃除をする時間が取れず部屋が散らかっている',
-                            '買い物リストを忘れて無駄な買い物をしてしまう'
-                        ],
-                        health: [
-                            '運動を始めても三日坊主で終わってしまう',
-                            '夜更かしが癖になって朝起きられない',
-                            'ストレスで過食してしまい体重が増え続けている'
-                        ],
-                        social: [
-                            '初対面の人と話すのが苦手で避けてしまう',
-                            '友人の誘いを断れずに疲れてしまう',
-                            '家族との会話が減って関係が薄くなっている'
-                        ],
-                        hobby: [
-                            '趣味に時間を使いすぎて他のことができない',
-                            '新しい趣味を始めたいが何から手をつけていいか分からない',
-                            '趣味にお金を使いすぎて貯金ができない'
-                        ]
-                    };
-                    return presets[category] || [];
+                    showToast('APIキーを設定してください', 'error');
+                    return [];
                 }
+                
+                const maxRetries = 2;
                 
                 // AI生成
                 try {
@@ -940,6 +910,10 @@
   ]
 }`;
                     
+                    // Add timeout for mobile connections
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+                    
                     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                         method: 'POST',
                         headers: {
@@ -956,22 +930,47 @@
                             ],
                             temperature: 0.8,
                             max_tokens: 300
-                        })
+                        }),
+                        signal: controller.signal
                     });
                     
+                    clearTimeout(timeoutId);
+                    
+                    if (!response.ok) {
+                        throw new Error(`API request failed: ${response.status}`);
+                    }
+                    
                     const data = await response.json();
+                    if (!data.choices || !data.choices[0]) {
+                        throw new Error('Invalid API response');
+                    }
+                    
                     const content = data.choices[0].message.content;
                     const jsonMatch = content.match(/\{[\s\S]*\}/);
                     if (jsonMatch) {
                         const parsed = JSON.parse(jsonMatch[0]);
                         return parsed.painPoints || [];
                     }
+                    return [];
                 } catch (error) {
-                    console.error('Pain point generation error:', error);
+                    console.error(`Pain point generation error (attempt ${retryCount + 1}):`, error);
+                    
+                    if (retryCount < maxRetries) {
+                        console.log(`Retrying... (attempt ${retryCount + 2}/${maxRetries + 1})`);
+                        showToast(`再試行中... (${retryCount + 2}/${maxRetries + 1})`, 'info');
+                        
+                        // Wait a bit before retrying
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        
+                        // Recursive retry
+                        return generatePainPoints(category, retryCount + 1);
+                    }
+                    
+                    // All retries failed
+                    showToast('お題の生成に失敗しました。もう一度お試しください。', 'error');
+                    throw error;
                 }
-                
-                return [];
-            }, [apiKey, apiModel, apiTested]);
+            }, [apiKey, apiModel, apiTested, showToast]);
             
             // AIペルソナ生成機能
             const generatePersonaWithAI = useCallback(async (painPoint) => {
@@ -2445,9 +2444,23 @@ ${conversationHistory}
                                                 if (!isGeneratingPainPoints) {
                                                     setSelectedCategory(cat.id);
                                                     setIsGeneratingPainPoints(true);
-                                                    const points = await generatePainPoints(cat.id);
-                                                    setPainPoints(points);
-                                                    setIsGeneratingPainPoints(false);
+                                                    try {
+                                                        const points = await generatePainPoints(cat.id);
+                                                        if (points && points.length > 0) {
+                                                            setPainPoints(points);
+                                                        } else {
+                                                            // Empty result, clear selection to allow retry
+                                                            setSelectedCategory(null);
+                                                            setPainPoints([]);
+                                                        }
+                                                    } catch (error) {
+                                                        console.error('All retries failed:', error);
+                                                        // Reset selection to allow user to try again
+                                                        setSelectedCategory(null);
+                                                        setPainPoints([]);
+                                                    } finally {
+                                                        setIsGeneratingPainPoints(false);
+                                                    }
                                                 }
                                             }}
                                             disabled={isGeneratingPainPoints}
