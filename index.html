@@ -537,12 +537,12 @@
         /* メッセージバブル - LINE風デザイン */
         .message-bubble {
             position: relative;
-            padding: 10px 14px;
-            border-radius: 20px;
+            padding: 8px 12px;
+            border-radius: 18px;
             max-width: 70%;
             word-wrap: break-word;
-            font-size: 15px;
-            line-height: 1.5;
+            font-size: 14px;
+            line-height: 1.4;
         }
         
         .message-bubble.user {
@@ -604,9 +604,10 @@
         /* モバイル対応 - LINE風UI */
         @media (max-width: 768px) {
             .message-bubble {
-                max-width: 75%;
-                font-size: 14px;
-                padding: 8px 12px;
+                max-width: 80%;
+                font-size: 13px;
+                padding: 7px 11px;
+                line-height: 1.4;
             }
             
             /* 入力フィールドをLINE風に */
@@ -615,55 +616,72 @@
                 bottom: 0;
                 left: 0;
                 right: 0;
-                background: #f7f8fa;
+                background: #ffffff;
                 border-top: 1px solid #e5e7eb;
-                padding: 8px;
+                padding: 6px 8px;
                 z-index: 100;
             }
             
             .mobile-input-field {
                 font-size: 16px !important; /* iOS自動ズーム防止 */
-                padding: 10px 12px !important;
+                padding: 8px 12px !important;
                 border-radius: 20px !important;
+                background: #f7f8fa !important;
             }
             
-            /* スコア表示をコンパクトに */
+            /* スコア表示を超コンパクトに */
             .mobile-status-bar {
-                position: sticky;
+                position: fixed;
                 top: 0;
+                left: 0;
+                right: 0;
                 z-index: 90;
                 background: white;
-                padding: 8px 12px;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                padding: 4px 8px;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+                height: 36px;
             }
             
             .mobile-compact-score {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                font-size: 13px;
+                font-size: 11px;
+                height: 100%;
             }
             
             /* チャットエリアの調整 */
             .mobile-chat-area {
-                padding-bottom: 80px !important; /* 入力エリア分の余白 */
+                padding-top: 40px !important; /* ステータスバー分の余白 */
+                padding-bottom: 70px !important; /* 入力エリア分の余白 */
+                padding-left: 8px !important;
+                padding-right: 8px !important;
             }
             
             /* ペルソナ情報をコンパクトに */
             .mobile-persona-info {
-                font-size: 12px;
-                padding: 6px 10px;
+                font-size: 11px;
+                padding: 4px 8px;
             }
             
             /* ボタンサイズ調整 */
             .mobile-button {
-                padding: 10px 16px;
-                font-size: 14px;
+                padding: 8px 12px;
+                font-size: 13px;
             }
             
             /* ステータスバーを非表示 */
             .hide-mobile {
                 display: none !important;
+            }
+            
+            /* ビューポート対応 */
+            .mobile-viewport {
+                height: 100vh;
+                height: -webkit-fill-available;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
             }
         }
         
@@ -2584,7 +2602,7 @@ ${conversationHistory}
             // ゲーム画面
             const renderGame = () => {
                 return (
-                <div className="min-h-screen flex flex-col">
+                <div className={`min-h-screen flex flex-col ${isMobile ? 'mobile-viewport' : ''}`}>
                     {/* ステータスバー */}
                     <div className={`bg-white shadow-lg ${isMobile ? 'mobile-status-bar' : 'p-4'}`}>
                         <div className="max-w-6xl mx-auto">
@@ -2592,28 +2610,21 @@ ${conversationHistory}
                                 {isMobile ? (
                                     // モバイル用コンパクト表示
                                     <>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs text-gray-500">💬</span>
-                                            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden max-w-[80px]">
-                                                <div 
-                                                    className={`h-full bg-gradient-to-r ${getMoodColor()}`}
-                                                    style={{ width: `${talkMeter}%` }}
-                                                />
-                                            </div>
-                                            <span className="text-sm">
+                                        <div className="flex items-center gap-1">
+                                            <span className="text-[10px]">
                                                 {mood === 'open' && '😊'}
                                                 {mood === 'normal' && '😐'}
                                                 {mood === 'guard' && '😔'}
                                                 {mood === 'close' && '😤'}
                                             </span>
+                                            <span className="text-[11px] font-bold text-purple-600">{currentScore}点</span>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs font-bold">{currentScore}点</span>
+                                        <div className="flex items-center gap-1">
                                             <div className="flex gap-0.5">
-                                                {[...Array(Math.min(maxQuestions, 8))].map((_, i) => (
+                                                {[...Array(Math.min(maxQuestions, 10))].map((_, i) => (
                                                     <div
                                                         key={i}
-                                                        className={`w-2 h-2 rounded-full ${
+                                                        className={`w-1.5 h-1.5 rounded-full ${
                                                             i < questionCount 
                                                                 ? 'bg-gray-300' 
                                                                 : 'bg-purple-500'
@@ -2621,6 +2632,9 @@ ${conversationHistory}
                                                     />
                                                 ))}
                                             </div>
+                                            <span className="text-[10px] text-gray-500">
+                                                {maxQuestions - questionCount}問
+                                            </span>
                                         </div>
                                     </>
                                 ) : (
@@ -2680,21 +2694,23 @@ ${conversationHistory}
                                 )}
                             </div>
                             
-                            {/* ペルソナ情報表示ボタン */}
-                            <div className="mt-3 flex justify-between items-center">
-                                <button
-                                    onClick={() => setShowPersonaInfo(!showPersonaInfo)}
-                                    className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg text-sm font-medium hover:from-blue-600 hover:to-purple-600 transition-all"
-                                >
-                                    {showPersonaInfo ? '👤 ペルソナ情報を隠す' : '👤 ペルソナ情報を見る'}
-                                </button>
-                                <div className="text-sm text-gray-600">
-                                    相手: <strong>{persona?.name}</strong> ({persona?.age}歳 / {persona?.job})
+                            {/* ペルソナ情報表示ボタン - モバイルでは非表示 */}
+                            {!isMobile && (
+                                <div className="mt-3 flex justify-between items-center">
+                                    <button
+                                        onClick={() => setShowPersonaInfo(!showPersonaInfo)}
+                                        className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg text-sm font-medium hover:from-blue-600 hover:to-purple-600 transition-all"
+                                    >
+                                        {showPersonaInfo ? '👤 ペルソナ情報を隠す' : '👤 ペルソナ情報を見る'}
+                                    </button>
+                                    <div className="text-sm text-gray-600">
+                                        相手: <strong>{persona?.name}</strong> ({persona?.age}歳 / {persona?.job})
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                             
-                            {/* ペルソナ詳細情報パネル */}
-                            {showPersonaInfo && persona && (
+                            {/* ペルソナ詳細情報パネル - モバイルでは非表示 */}
+                            {!isMobile && showPersonaInfo && persona && (
                                 <div className="mt-3 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200 fade-in">
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                         <div>
@@ -2737,8 +2753,8 @@ ${conversationHistory}
                                 </div>
                             )}
                             
-                            {/* ベスト質問表示 */}
-                            {bestQuestions.length > 0 && (
+                            {/* ベスト質問表示 - モバイルでは非表示 */}
+                            {!isMobile && bestQuestions.length > 0 && (
                                 <div className="mt-4 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
                                     <div className="text-sm font-bold text-purple-700 mb-2">🏆 優秀な質問</div>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
@@ -2752,8 +2768,8 @@ ${conversationHistory}
                                 </div>
                             )}
                             
-                            {/* リアルタイムヒント */}
-                            {questionCount > 2 && scoreHistory.length > 0 && (
+                            {/* リアルタイムヒント - モバイルでは非表示 */}
+                            {!isMobile && questionCount > 2 && scoreHistory.length > 0 && (
                                 <div className="mt-3 p-3 bg-blue-50 rounded-lg">
                                     <div className="text-xs text-blue-800">
                                         💡 ヒント: 
