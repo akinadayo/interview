@@ -750,10 +750,17 @@
             
             /* モバイルコンテナ調整 - 100svh使用 */
             .mobile-game-container {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
                 height: 100svh; /* Small Viewport Height - キーボードを考慮 */
                 display: flex;
                 flex-direction: column;
                 overflow: hidden;
+                background: white;
+                z-index: 1;
             }
             
             /* svhサポートしてないブラウザ用のフォールバック */
@@ -762,6 +769,15 @@
                     height: 100vh;
                     height: calc(var(--vh, 1vh) * 100);
                 }
+            }
+            
+            /* チャットラッパー */
+            .mobile-chat-wrapper {
+                flex: 1;
+                min-height: 0;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
             }
             
             /* スクロール最適化 */
@@ -3240,8 +3256,9 @@ ${conversationHistory}
                     
                     {/* チャットエリア */}
                     {isMobile ? (
-                        <div className="flex-1 bg-[#8eb4cb] overflow-y-auto p-2 min-h-0 mobile-chat-area" ref={chatAreaRef}>
-                            {messages.map((msg, index) => (
+                        <div className="mobile-chat-wrapper">
+                            <div className="flex-1 bg-[#8eb4cb] overflow-y-auto p-2 min-h-0 mobile-chat-area" ref={chatAreaRef}>
+                                {messages.map((msg, index) => (
                                 <div 
                                     key={index} 
                                     className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'} mb-2`}
@@ -3262,6 +3279,7 @@ ${conversationHistory}
                             )}
                             <div ref={messagesEndRef} />
                         </div>
+                    </div>
                     ) : (
                         <div className="relative flex-1">
                             <div 
