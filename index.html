@@ -364,12 +364,25 @@
             box-sizing: border-box;
         }
         
+        :root {
+            --keyboard-height: 0px;
+            --vh: 1vh;
+            --safe-area-inset-top: env(safe-area-inset-top, 0px);
+            --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        
+        html {
+            height: 100%;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+        
         body {
             font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            height: 100%;
+            width: 100%;
             overflow-x: hidden;
-            -webkit-text-size-adjust: 100%;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             touch-action: manipulation;
@@ -623,12 +636,14 @@
                 background: #ffffff;
                 border-top: 1px solid #ddd;
                 padding: 8px;
-                padding-bottom: calc(8px + env(safe-area-inset-bottom));
+                padding-bottom: calc(8px + var(--safe-area-inset-bottom));
                 display: flex;
                 align-items: center;
                 gap: 8px;
                 flex: 0 0 auto;
                 min-height: 56px;
+                position: relative;
+                z-index: 50;
             }
             
             .mobile-input-field {
@@ -729,20 +744,20 @@
             }
             
             /* キーボード表示時の調整用 */
-            .keyboard-visible {
-                --keyboard-height: 0px;
-            }
-            
             .keyboard-visible .mobile-chat-area {
                 /* キーボード高さ分だけチャットエリアを縮小 */
-                max-height: calc(100vh - var(--keyboard-height) - 100px);
+                max-height: calc(100vh - var(--keyboard-height) - 120px);
+                max-height: calc(var(--vh, 1vh) * 100 - var(--keyboard-height) - 120px);
             }
             
-            /* iOSキーボード対応 */
-            @supports (height: 100dvh) {
-                .keyboard-visible .flex-1 {
-                    max-height: calc(100dvh - var(--keyboard-height) - 100px);
-                }
+            /* モバイルコンテナ調整 */
+            .mobile-game-container {
+                height: 100%;
+                height: 100vh;
+                height: calc(var(--vh, 1vh) * 100);
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
             }
             
             /* スクロール最適化 */
@@ -969,22 +984,34 @@
                 // Visual Viewport API for keyboard detection (iOS and Android)
                 const handleViewportChange = () => {
                     if (window.visualViewport) {
-                        const keyboardHeight = window.innerHeight - window.visualViewport.height;
+                        const windowHeight = window.innerHeight;
+                        const viewportHeight = window.visualViewport.height;
+                        const keyboardHeight = windowHeight - viewportHeight;
                         setKeyboardHeight(keyboardHeight);
+                        setViewportHeight(viewportHeight);
+                        
+                        // CSS変数を更新
+                        document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+                        const vh = viewportHeight * 0.01;
+                        document.documentElement.style.setProperty('--vh', `${vh}px`);
                         
                         // Add class when keyboard is visible
                         if (keyboardHeight > 50) {
                             document.body.classList.add('keyboard-visible');
-                            // Dynamically adjust chat area height
-                            const root = document.getElementById('root');
-                            if (root && isMobile) {
-                                root.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+                            // モバイルでゲーム中の場合、コンテナの高さを調整
+                            if (isMobile && gameState === 'playing') {
+                                const container = document.querySelector('.mobile-game-container');
+                                if (container) {
+                                    container.style.height = `${viewportHeight}px`;
+                                }
                             }
                         } else {
                             document.body.classList.remove('keyboard-visible');
-                            const root = document.getElementById('root');
-                            if (root && isMobile) {
-                                root.style.setProperty('--keyboard-height', '0px');
+                            if (isMobile && gameState === 'playing') {
+                                const container = document.querySelector('.mobile-game-container');
+                                if (container) {
+                                    container.style.height = '';
+                                }
                             }
                         }
                     }
@@ -2949,7 +2976,7 @@ ${conversationHistory}
                 console.log('renderGame - messages:', messages);
                 console.log('renderGame - messages length:', messages.length);
                 return (
-                <div className={`${isMobile ? 'flex flex-col h-screen overflow-hidden' : 'min-h-screen flex flex-col'}`} style={isMobile ? {height: `${window.visualViewport ? window.visualViewport.height : window.innerHeight}px`} : {}}>
+                <div className={`${isMobile ? 'mobile-game-container' : 'min-h-screen flex flex-col'}`}>
                     {/* ステータスバー */}
                     <div className={`bg-white ${isMobile ? 'mobile-status-bar' : 'shadow-lg p-4'}`}>
                         <div className="max-w-6xl mx-auto">
@@ -3193,9 +3220,7 @@ ${conversationHistory}
                     
                     {/* チャットエリア */}
                     {isMobile ? (
-                        <div className="flex-1 bg-[#8eb4cb] overflow-y-auto p-2 min-h-0" ref={chatAreaRef} style={{
-                            maxHeight: keyboardHeight > 0 ? `calc(100vh - ${keyboardHeight}px - 100px)` : 'auto'
-                        }}>
+                        <div className="flex-1 bg-[#8eb4cb] overflow-y-auto p-2 min-h-0 mobile-chat-area" ref={chatAreaRef}>
                             {messages.map((msg, index) => (
                                 <div 
                                     key={index} 
