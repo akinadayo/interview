@@ -367,6 +367,7 @@
         :root {
             --keyboard-height: 0px;
             --vh: 1vh;
+            --mobile-vh: 100vh;
             --safe-area-inset-top: env(safe-area-inset-top, 0px);
             --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
         }
@@ -622,184 +623,254 @@
             }
         }
         
-        /* モバイル対応 - LINE風UI */
+        /* Mobile chat experience */
         @media (max-width: 768px) {
             .message-bubble {
-                max-width: 80%;
-                font-size: 13px;
-                padding: 7px 11px;
-                line-height: 1.4;
+                max-width: 85%;
+                font-size: 14px;
+                padding: 9px 13px;
+                line-height: 1.5;
             }
-            
-            /* 入力フィールドをLINE風に */
-            .mobile-input-area {
-                background: #ffffff;
-                border-top: 1px solid #ddd;
-                padding: 8px;
-                padding-bottom: calc(8px + var(--safe-area-inset-bottom));
+
+            .mobile-chat-shell {
+                position: fixed;
+                inset: 0;
+                display: flex;
+                flex-direction: column;
+                height: var(--mobile-vh, 100dvh);
+                background: linear-gradient(160deg, #f3f4f6 0%, #dde8ff 100%);
+                z-index: 1;
+            }
+
+            @supports (height: 100dvh) {
+                .mobile-chat-shell {
+                    height: 100dvh;
+                }
+            }
+
+            @supports not (height: 100dvh) {
+                .mobile-chat-shell {
+                    height: calc(var(--vh, 1vh) * 100);
+                }
+            }
+
+            .mobile-chat-header {
+                flex: 0 0 auto;
+                padding: calc(12px + env(safe-area-inset-top)) 18px 12px;
+                background: rgba(255, 255, 255, 0.92);
+                backdrop-filter: blur(14px);
+                box-shadow: 0 1px 0 rgba(15, 23, 42, 0.05);
+            }
+
+            .mobile-chat-header-top {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+            }
+
+            .mobile-chat-title {
+                font-size: 12px;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: #64748b;
+            }
+
+            .mobile-chat-score {
+                font-size: 28px;
+                font-weight: 700;
+                color: #312e81;
+                line-height: 1.1;
+            }
+
+            .mobile-header-actions {
                 display: flex;
                 align-items: center;
                 gap: 8px;
-                flex-shrink: 0;
-                min-height: 56px;
-                position: relative;
-                z-index: 50;
             }
-            
-            .mobile-input-field {
-                font-size: 16px !important; /* iOS自動ズーム防止 */
-                padding: 8px 12px !important;
-                border-radius: 20px !important;
-                background: #f7f8fa !important;
+
+            .mobile-header-button {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 8px 10px;
+                font-size: 13px;
+                font-weight: 600;
+                background: #eef2ff;
+                color: #4338ca;
+                border-radius: 999px;
+            }
+
+            .mobile-chat-meta {
+                display: flex;
+                gap: 8px;
+                margin-top: 14px;
+                flex-wrap: wrap;
+            }
+
+            .mobile-chip {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                padding: 6px 10px;
+                background: rgba(148, 163, 184, 0.15);
+                border-radius: 12px;
+                font-size: 12px;
+                color: #475569;
+            }
+
+            .mobile-chip strong {
+                font-size: 13px;
+                color: #0f172a;
+            }
+
+            .mobile-meter {
+                margin-top: 12px;
+            }
+
+            .mobile-meter-label {
+                font-size: 12px;
+                color: #64748b;
+                margin-bottom: 6px;
+                display: inline-block;
+            }
+
+            .mobile-meter-track {
+                position: relative;
+                width: 100%;
+                height: 8px;
+                border-radius: 999px;
+                background: rgba(148, 163, 184, 0.2);
+                overflow: hidden;
+            }
+
+            .mobile-meter-fill {
+                height: 100%;
+                border-radius: inherit;
+                background: linear-gradient(90deg, #6366f1, #ec4899);
+                transition: width 0.3s ease;
+            }
+
+            .mobile-chat-scroll-wrapper {
+                position: relative;
+                flex: 1 1 auto;
+                min-height: 0;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .mobile-chat-scroll {
+                flex: 1 1 auto;
+                overflow-y: auto;
+                padding: 20px 16px 88px;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .mobile-chat-scroll::after {
+                content: '';
+                display: block;
+                height: 1px;
+                width: 100%;
+            }
+
+            .mobile-scroll-to-bottom {
+                position: absolute;
+                right: 16px;
+                bottom: calc(84px + env(safe-area-inset-bottom));
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #6366f1, #ec4899);
+                color: white;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 12px 24px rgba(99, 102, 241, 0.35);
+            }
+
+            .mobile-chat-compose {
+                flex: 0 0 auto;
+                padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+                background: white;
+                box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.08);
+            }
+
+            .mobile-composer-fieldset {
+                display: flex;
+                align-items: flex-end;
+                gap: 10px;
+            }
+
+            .mobile-composer-input {
+                flex: 1;
+                min-height: 48px;
+                padding: 12px 16px;
+                border: 1px solid rgba(148, 163, 184, 0.4);
+                border-radius: 18px;
+                background: rgba(248, 250, 252, 0.85);
+                font-size: 16px;
+                line-height: 1.4;
                 -webkit-appearance: none;
-                -moz-appearance: none;
                 appearance: none;
             }
-            
-            /* スコア表示を超コンパクトに */
-            .mobile-status-bar {
-                background: white;
-                padding: 8px;
-                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-                border-bottom: 1px solid #e5e7eb;
+
+            .mobile-composer-input:focus {
+                border-color: #6366f1;
+                box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.18);
+                background: #ffffff;
+            }
+
+            .mobile-send-button {
                 flex: 0 0 auto;
-                min-height: 44px;
+                padding: 0 18px;
+                min-height: 48px;
+                border-radius: 16px;
+                font-size: 15px;
+                font-weight: 600;
+                background: linear-gradient(135deg, #6366f1, #ec4899);
+                color: #ffffff;
+                box-shadow: 0 8px 18px rgba(236, 72, 153, 0.35);
             }
-            
-            .mobile-compact-score {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                font-size: 11px;
+
+            .mobile-send-button:disabled {
+                opacity: 0.5;
+                box-shadow: none;
             }
-            
-            /* チャットエリアの調整 - LINE風 */
-            .mobile-chat-area {
-                background: #8eb4cb; /* LINE風の背景色 */
-                padding: 8px;
-                overflow-y: auto;
-                -webkit-overflow-scrolling: touch;
-                min-height: 0;
-                flex: 1 1 auto;
+
+            .mobile-combo-indicator {
+                margin-top: 10px;
+                text-align: center;
+                font-size: 14px;
+                font-weight: 700;
+                color: #7c3aed;
             }
-            
-            /* ペルソナ情報をコンパクトに */
-            .mobile-persona-info {
-                font-size: 11px;
-                padding: 4px 8px;
-            }
-            
-            /* モバイルペルソナ情報モーダル */
+
             .mobile-persona-modal {
                 position: fixed;
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
                 width: 90%;
-                max-width: 350px;
+                max-width: 340px;
                 background: white;
-                border-radius: 12px;
-                padding: 16px;
+                border-radius: 16px;
+                padding: 20px;
                 z-index: 200;
-                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+                box-shadow: 0 25px 40px rgba(15, 23, 42, 0.25);
             }
-            
+
             .mobile-persona-overlay {
                 position: fixed;
                 inset: 0;
-                background: rgba(0, 0, 0, 0.5);
+                background: rgba(15, 23, 42, 0.55);
                 z-index: 199;
             }
-            
-            /* ボタンサイズ調整 */
-            .mobile-button {
-                padding: 8px 12px;
-                font-size: 13px;
-            }
-            
-            /* ステータスバーを非表示 */
-            .hide-mobile {
-                display: none !important;
-            }
-            
-            /* ビューポート対応 */
-            .mobile-viewport {
-                height: 100vh;
-                height: -webkit-fill-available;
-                height: 100dvh;
-                height: calc(var(--vh, 1vh) * 100); /* Android Chrome対応 */
-                overflow: hidden;
-                display: flex;
-                flex-direction: column;
-                position: relative;
-            }
-            
-            /* iOS Safe Area対応 */
-            .safe-area-top {
-                padding-top: env(safe-area-inset-top);
-            }
-            
-            .safe-area-bottom {
-                padding-bottom: env(safe-area-inset-bottom);
-            }
-            
-            /* キーボード表示時の調整 - 基本的に100svhに任せる */
-            .mobile-chat-area {
-                /* padding-bottomはJSで動的に設定 */
-            }
-            
-            /* モバイルコンテナ調整 - 100svh使用 */
-            .mobile-game-container {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                height: calc(100svh - var(--keyboard-height));
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
-                background: white;
-                z-index: 1;
-                transition: height 0.2s ease;
-            }
-            
-            /* svhサポートしてないブラウザ用のフォールバック */
-            @supports not (height: 100svh) {
-                .mobile-game-container {
-                    height: calc(var(--vh, 1vh) * 100 - var(--keyboard-height));
-                }
-            }
-            
-            /* チャットラッパー */
-            .mobile-chat-wrapper {
-                flex: 1;
-                min-height: 0;
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
-            }
-            
-            /* スクロール最適化 */
-            .smooth-scroll {
-                scroll-behavior: smooth;
-                -webkit-overflow-scrolling: touch;
-            }
-            
-            /* 入力フィールドフォーカス時のスタイル */
-            input:focus, textarea:focus, select:focus {
+
+            input:focus,
+            textarea:focus,
+            select:focus {
                 outline: none;
                 -webkit-tap-highlight-color: transparent;
-            }
-            
-            /* Android Chrome用の追加調整 */
-            @supports (-webkit-appearance: none) and (not (-ms-ime-align: auto)) {
-                .mobile-input-field {
-                    font-size: 16px !important;
-                }
-                
-                .mobile-viewport {
-                    min-height: -webkit-fill-available;
-                }
             }
         }
         
@@ -982,7 +1053,6 @@
             const inputRef = useRef(null);
             const chatAreaRef = useRef(null);
             const initialViewportHeightRef = useRef(typeof window !== 'undefined' ? window.innerHeight : 0);
-            const keyboardHeightRef = useRef(0);
 
             // Show API settings on first load if no API key
             useEffect(() => {
@@ -991,116 +1061,84 @@
                 }
             }, []); // Run only on mount
             
-            // Detect mobile device and keep the chat surface visible when the keyboard opens
             useEffect(() => {
-                const updateViewportUnits = () => {
-                    const baseHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-                    const vh = baseHeight * 0.01;
-                    document.documentElement.style.setProperty('--vh', `${vh}px`);
-                    if (keyboardHeightRef.current === 0) {
-                        initialViewportHeightRef.current = window.innerHeight;
-                    }
-                };
+                if (typeof window === 'undefined') return;
 
-                const checkMobile = () => {
+                const updateMobileFlag = () => {
                     setIsMobile(window.innerWidth <= 768);
+                    initialViewportHeightRef.current = window.innerHeight;
+                    document.documentElement.style.setProperty('--mobile-vh', `${window.innerHeight}px`);
+                    const vh = window.innerHeight * 0.01;
+                    document.documentElement.style.setProperty('--vh', `${vh}px`);
                 };
 
-                const syncBottomPadding = () => {
-                    if (isMobile && gameState === 'playing') {
-                        const inputArea = document.querySelector('.mobile-input-area');
-                        const chatArea = chatAreaRef.current;
-                        if (inputArea && chatArea) {
-                            const inputH = inputArea.getBoundingClientRect().height;
-                            chatArea.style.paddingBottom = `${inputH}px`;
-                        }
-                    }
+                updateMobileFlag();
+
+                window.addEventListener('resize', updateMobileFlag);
+                window.addEventListener('orientationchange', updateMobileFlag);
+
+                return () => {
+                    window.removeEventListener('resize', updateMobileFlag);
+                    window.removeEventListener('orientationchange', updateMobileFlag);
                 };
+            }, []);
 
-                const updateKeyboardInset = () => {
-                    if (!isMobile || !window.visualViewport) {
-                        if (keyboardHeightRef.current !== 0) {
-                            keyboardHeightRef.current = 0;
-                        }
-                        document.documentElement.style.setProperty('--keyboard-height', '0px');
-                        return;
-                    }
+            // Keep the mobile chat surface visible while the on-screen keyboard is open
+            useEffect(() => {
+                if (typeof window === 'undefined') return;
 
+                if (!isMobile) {
+                    document.documentElement.style.setProperty('--mobile-vh', `${window.innerHeight}px`);
+                    document.documentElement.style.setProperty('--keyboard-height', '0px');
+                    return;
+                }
+
+                const applyViewportSizing = () => {
                     const vv = window.visualViewport;
-                    const baseline = initialViewportHeightRef.current || window.innerHeight;
-                    const visibleBottom = vv.height + vv.offsetTop;
-                    const inset = Math.max(baseline - visibleBottom, 0);
-                    const normalized = inset < 1 ? 0 : inset;
+                    const height = vv ? vv.height : window.innerHeight;
+                    document.documentElement.style.setProperty('--mobile-vh', `${height}px`);
+                    document.documentElement.style.setProperty('--vh', `${height * 0.01}px`);
 
-                    document.documentElement.style.setProperty('--keyboard-height', `${normalized}px`);
-
-                    if (Math.abs(normalized - keyboardHeightRef.current) > 1) {
-                        keyboardHeightRef.current = normalized;
-                    } else if (normalized === 0 && keyboardHeightRef.current !== 0) {
-                        keyboardHeightRef.current = 0;
+                    if (vv) {
+                        const baseline = initialViewportHeightRef.current || window.innerHeight;
+                        const inset = Math.max(baseline - (vv.height + (vv.offsetTop || 0)), 0);
+                        const normalized = inset < 1 ? 0 : inset;
+                        document.documentElement.style.setProperty('--keyboard-height', `${normalized}px`);
+                    } else {
+                        document.documentElement.style.setProperty('--keyboard-height', '0px');
                     }
-                };
-
-                const handleViewportChange = () => {
-                    updateViewportUnits();
-                    updateKeyboardInset();
-                    syncBottomPadding();
-                };
-
-                const handleWindowResize = () => {
-                    checkMobile();
-                    handleViewportChange();
                 };
 
                 const handleFocusIn = (event) => {
                     if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
                         setTimeout(() => {
-                            if (chatAreaRef.current) {
-                                chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
+                            const area = chatAreaRef.current;
+                            if (area) {
+                                area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' });
                             }
-                            handleViewportChange();
-                        }, 50);
+                        }, 80);
                     }
                 };
 
                 const handleFocusOut = () => {
-                    setTimeout(() => {
-                        handleViewportChange();
-                    }, 50);
+                    setTimeout(applyViewportSizing, 120);
                 };
 
-                checkMobile();
-                handleViewportChange();
+                applyViewportSizing();
 
-                window.addEventListener('resize', handleWindowResize);
-                window.addEventListener('orientationchange', handleWindowResize);
-
-                if (window.visualViewport) {
-                    window.visualViewport.addEventListener('resize', handleViewportChange);
-                    window.visualViewport.addEventListener('scroll', handleViewportChange);
-                }
-
+                const vv = window.visualViewport;
+                vv?.addEventListener('resize', applyViewportSizing);
+                vv?.addEventListener('scroll', applyViewportSizing);
                 document.addEventListener('focusin', handleFocusIn);
                 document.addEventListener('focusout', handleFocusOut);
 
                 return () => {
-                    window.removeEventListener('resize', handleWindowResize);
-                    window.removeEventListener('orientationchange', handleWindowResize);
-                    if (window.visualViewport) {
-                        window.visualViewport.removeEventListener('resize', handleViewportChange);
-                        window.visualViewport.removeEventListener('scroll', handleViewportChange);
-                    }
+                    vv?.removeEventListener('resize', applyViewportSizing);
+                    vv?.removeEventListener('scroll', applyViewportSizing);
                     document.removeEventListener('focusin', handleFocusIn);
                     document.removeEventListener('focusout', handleFocusOut);
                 };
             }, [isMobile, gameState]);
-
-            useEffect(() => {
-                return () => {
-                    if (typeof window === 'undefined') return;
-                    document.documentElement.style.setProperty('--keyboard-height', '0px');
-                };
-            }, []);
 
             useEffect(() => {
                 if (typeof window === 'undefined') return;
@@ -3013,112 +3051,240 @@ ${conversationHistory}
             const renderGame = () => {
                 console.log('renderGame - messages:', messages);
                 console.log('renderGame - messages length:', messages.length);
-                return (
-                <div className={`${isMobile ? 'mobile-game-container' : 'min-h-screen flex flex-col'}`}>
-                    {/* ステータスバー */}
-                    <div className={`bg-white ${isMobile ? 'mobile-status-bar' : 'shadow-lg p-4'}`}>
-                        <div className="max-w-6xl mx-auto">
-                            <div className={isMobile ? 'mobile-compact-score' : 'grid grid-cols-2 md:grid-cols-4 gap-4'}>
-                                {isMobile ? (
-                                    // モバイル用コンパクト表示
-                                    <>
-                                        <div className="flex items-center gap-2">
+
+                const remainingQuestions = Math.max(maxQuestions - questionCount, 0);
+                const personaName = persona?.name || 'ゲスト';
+                const moodEmoji = mood === 'open' ? '😊' : mood === 'normal' ? '😐' : mood === 'guard' ? '😔' : mood === 'close' ? '😤' : '🙂';
+                const moodLabel = mood === 'open' ? '開放的' : mood === 'normal' ? '普通' : mood === 'guard' ? '警戒' : mood === 'close' ? '閉鎖的' : '安定';
+                const moodDisplay = `${moodEmoji} ${moodLabel}`.trim();
+
+                if (isMobile) {
+                    return (
+                        <div className="mobile-chat-shell">
+                            <header className="mobile-chat-header">
+                                <div className="mobile-chat-header-top">
+                                    <div>
+                                        <div className="mobile-chat-title">現在のスコア</div>
+                                        <div className="mobile-chat-score">
+                                            {currentScore}
+                                            <span className="ml-1 text-sm font-semibold text-indigo-400">点</span>
+                                        </div>
+                                    </div>
+                                    <div className="mobile-header-actions">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPersonaInfo(!showPersonaInfo)}
+                                            className="mobile-header-button"
+                                        >
+                                            <span role="img" aria-hidden="true">👤</span>
+                                            ペルソナ
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="mobile-chat-meta">
+                                    <div className="mobile-chip">
+                                        <span>相手</span>
+                                        <strong>{personaName}</strong>
+                                    </div>
+                                    <div className="mobile-chip">
+                                        <span>質問</span>
+                                        <strong>{questionCount}/{maxQuestions}</strong>
+                                    </div>
+                                    <div className="mobile-chip">
+                                        <span>残り</span>
+                                        <strong>{remainingQuestions}</strong>
+                                    </div>
+                                    <div className="mobile-chip">
+                                        <span>気分</span>
+                                        <strong>{moodDisplay}</strong>
+                                    </div>
+                                </div>
+                                <div className="mobile-meter">
+                                    <span className="mobile-meter-label">話したい度</span>
+                                    <div className="mobile-meter-track">
+                                        <div className="mobile-meter-fill" style={{ width: `${talkMeter}%` }} />
+                                    </div>
+                                </div>
+                            </header>
+
+                            {showPersonaInfo && persona && (
+                                <>
+                                    <div className="mobile-persona-overlay" onClick={() => setShowPersonaInfo(false)} />
+                                    <div className="mobile-persona-modal">
+                                        <div className="flex justify-between items-center mb-3">
+                                            <h3 className="text-lg font-bold">ペルソナ情報</h3>
                                             <button
-                                                onClick={() => setShowPersonaInfo(!showPersonaInfo)}
-                                                className="p-1.5 bg-blue-500 text-white rounded-full"
-                                                title="ペルソナ情報"
+                                                onClick={() => setShowPersonaInfo(false)}
+                                                className="p-1 rounded-full hover:bg-gray-100"
                                             >
-                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                                 </svg>
                                             </button>
-                                            <div className="flex items-center gap-1">
-                                                <span className="text-[11px]">
-                                                    {mood === 'open' && '😊'}
-                                                    {mood === 'normal' && '😐'}
-                                                    {mood === 'guard' && '😔'}
-                                                    {mood === 'close' && '😤'}
-                                                </span>
-                                                <span className="text-[12px] font-bold text-purple-600">{currentScore}点</span>
-                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex gap-0.5">
-                                                {[...Array(Math.min(maxQuestions, 10))].map((_, i) => (
-                                                    <div
-                                                        key={i}
-                                                        className={`w-2 h-2 rounded-full ${
-                                                            i < questionCount 
-                                                                ? 'bg-gray-300' 
-                                                                : 'bg-purple-500'
-                                                        }`}
-                                                    />
-                                                ))}
+                                        <div className="space-y-2 text-sm">
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">名前:</span>
+                                                <span className="font-medium">{persona.name}</span>
                                             </div>
-                                            <span className="text-[11px] text-gray-500">
-                                                残{maxQuestions - questionCount}
-                                            </span>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">年齢:</span>
+                                                <span className="font-medium">{persona.age}歳 / {persona.gender}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">職業:</span>
+                                                <span className="font-medium">{persona.job}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">居住地:</span>
+                                                <span className="font-medium">{persona.location}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">家族:</span>
+                                                <span className="font-medium">{persona.family}</span>
+                                            </div>
+                                            {persona.currentSituation && (
+                                                <div className="pt-2 mt-2 border-t">
+                                                    <div className="text-gray-500 mb-1">現在の状況:</div>
+                                                    <div className="text-xs">{persona.currentSituation}</div>
+                                                </div>
+                                            )}
                                         </div>
-                                    </>
-                                ) : (
-                                    // デスクトップ用通常表示
-                                    <>
-                                        <div>
-                                            <div className="text-sm text-gray-500 mb-1">話したい度</div>
-                                            <div className="progress-bar">
-                                                <div 
-                                                    className={`progress-bar-fill bg-gradient-to-r ${getMoodColor()}`}
-                                                    style={{ width: `${talkMeter}%` }}
-                                                />
+                                    </div>
+                                </>
+                            )}
+
+                            <div className="mobile-chat-scroll-wrapper">
+                                <div
+                                    ref={chatAreaRef}
+                                    className="mobile-chat-scroll"
+                                    onScroll={handleScroll}
+                                >
+                                    <div className="space-y-3">
+                                        {messages.map((msg, index) => (
+                                            <div
+                                                key={index}
+                                                className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                                            >
+                                                <div className={`message-bubble ${msg.type === 'system' ? 'ai' : msg.type}`}>
+                                                    <div>{msg.content}</div>
+                                                    {msg.score !== undefined && (
+                                                        <div className="mt-2 text-[11px] opacity-70">
+                                                            スコア: {msg.score}点
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div>
-                                            <div className="text-sm text-gray-500 mb-1">スコア</div>
-                                            <div className="text-2xl font-bold">
-                                                {currentScore}
+                                        ))}
+                                        {isTyping && (
+                                            <div className="flex justify-start">
+                                                <div className="message-bubble ai flex gap-1 items-center">
+                                                    <span className="typing-dot inline-block w-2 h-2 bg-gray-400 rounded-full"></span>
+                                                    <span className="typing-dot inline-block w-2 h-2 bg-gray-400 rounded-full"></span>
+                                                    <span className="typing-dot inline-block w-2 h-2 bg-gray-400 rounded-full"></span>
+                                                </div>
                                             </div>
-                                            <div className="text-xs text-gray-500 mt-1">
-                                                点
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div className="text-sm text-gray-500 mb-1">残り質問</div>
-                                            <div className="flex gap-1">
-                                                {[...Array(maxQuestions)].map((_, i) => (
-                                                    <div
-                                                        key={i}
-                                                        className={`w-3 h-3 rounded-full ${
-                                                            i < questionCount 
-                                                                ? 'bg-gray-300' 
-                                                                : 'bg-purple-500'
-                                                        }`}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div className="text-sm text-gray-500 mb-1">気分</div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-2xl">
-                                                    {mood === 'open' && '😊'}
-                                                    {mood === 'normal' && '😐'}
-                                                    {mood === 'guard' && '😔'}
-                                                    {mood === 'close' && '😤'}
-                                                </span>
-                                                <span className="text-xs text-gray-600">
-                                                    {mood === 'open' && '開放的'}
-                                                    {mood === 'normal' && '普通'}
-                                                    {mood === 'guard' && '警戒'}
-                                                    {mood === 'close' && '閉鎖的'}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </>
+                                        )}
+                                        <div ref={messagesEndRef} />
+                                    </div>
+                                </div>
+                                {!shouldAutoScroll && (
+                                    <button
+                                        type="button"
+                                        onClick={scrollToLatest}
+                                        className="mobile-scroll-to-bottom"
+                                        aria-label="最新のメッセージへ"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v14m0 0l6-6m-6 6l-6-6" />
+                                        </svg>
+                                    </button>
                                 )}
                             </div>
-                            
-                            {/* ペルソナ情報表示ボタン - モバイルでは非表示 */}
-                            {!isMobile && (
+
+                            <div className="mobile-chat-compose">
+                                <div className="mobile-composer-fieldset">
+                                    <input
+                                        ref={inputRef}
+                                        type="text"
+                                        value={currentQuestion}
+                                        onChange={(e) => setCurrentQuestion(e.target.value)}
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                handleSubmitQuestion();
+                                            }
+                                        }}
+                                        placeholder="質問を入力..."
+                                        disabled={questionCount >= maxQuestions}
+                                        autoComplete="off"
+                                        autoCorrect="off"
+                                        autoCapitalize="off"
+                                        spellCheck="false"
+                                        className="mobile-composer-input"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleSubmitQuestion}
+                                        disabled={!currentQuestion.trim() || questionCount >= maxQuestions}
+                                        className="mobile-send-button"
+                                    >
+                                        送信
+                                    </button>
+                                </div>
+                                {comboCount > 0 && (
+                                    <div className="mobile-combo-indicator">
+                                        🔥 {comboCount}コンボ！
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    );
+                }
+
+                return (
+                    <div className="min-h-screen flex flex-col">
+                        <div className="bg-white shadow-lg p-4">
+                            <div className="max-w-6xl mx-auto">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div>
+                                        <div className="text-sm text-gray-500 mb-1">話したい度</div>
+                                        <div className="progress-bar">
+                                            <div
+                                                className={`progress-bar-fill bg-gradient-to-r ${getMoodColor()}`}
+                                                style={{ width: `${talkMeter}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-sm text-gray-500 mb-1">スコア</div>
+                                        <div className="text-2xl font-bold">
+                                            {currentScore}
+                                        </div>
+                                        <div className="text-xs text-gray-500 mt-1">点</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-sm text-gray-500 mb-1">残り質問</div>
+                                        <div className="flex gap-1">
+                                            {[...Array(maxQuestions)].map((_, i) => (
+                                                <div
+                                                    key={i}
+                                                    className={`w-3 h-3 rounded-full ${
+                                                        i < questionCount ? 'bg-gray-300' : 'bg-purple-500'
+                                                    }`}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-sm text-gray-500 mb-1">気分</div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-2xl">{moodEmoji}</span>
+                                            <span className="text-xs text-gray-600">{moodLabel}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div className="mt-3 flex justify-between items-center">
                                     <button
                                         onClick={() => setShowPersonaInfo(!showPersonaInfo)}
@@ -3130,169 +3296,89 @@ ${conversationHistory}
                                         相手: <strong>{persona?.name}</strong> ({persona?.age}歳 / {persona?.job})
                                     </div>
                                 </div>
-                            )}
-                            
-                            {/* ペルソナ詳細情報パネル */}
-                            {showPersonaInfo && persona && (
-                                isMobile ? (
-                                    // モバイル用モーダル
-                                    <>
-                                        <div className="mobile-persona-overlay" onClick={() => setShowPersonaInfo(false)} />
-                                        <div className="mobile-persona-modal">
-                                            <div className="flex justify-between items-center mb-3">
-                                                <h3 className="text-lg font-bold">ペルソナ情報</h3>
-                                                <button
-                                                    onClick={() => setShowPersonaInfo(false)}
-                                                    className="p-1 rounded-full hover:bg-gray-100"
-                                                >
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                            <div className="space-y-2 text-sm">
-                                                <div className="flex justify-between">
-                                                    <span className="text-gray-500">名前:</span>
-                                                    <span className="font-medium">{persona.name}</span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span className="text-gray-500">年齢:</span>
-                                                    <span className="font-medium">{persona.age}歳 / {persona.gender}</span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span className="text-gray-500">職業:</span>
-                                                    <span className="font-medium">{persona.job}</span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span className="text-gray-500">居住地:</span>
-                                                    <span className="font-medium">{persona.location}</span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span className="text-gray-500">家族:</span>
-                                                    <span className="font-medium">{persona.family}</span>
-                                                </div>
-                                                {persona.currentSituation && (
-                                                    <div className="pt-2 mt-2 border-t">
-                                                        <div className="text-gray-500 mb-1">現在の状況:</div>
-                                                        <div className="text-xs">{persona.currentSituation}</div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </>
-                                ) : (
-                                    // デスクトップ用パネル
-                                <div className="mt-3 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200 fade-in">
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                        <div>
-                                            <div className="text-xs text-gray-500">名前</div>
-                                            <div className="font-medium">{persona.name}</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-xs text-gray-500">年齢・性別</div>
-                                            <div className="font-medium">{persona.age}歳 / {persona.gender}</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-xs text-gray-500">職業</div>
-                                            <div className="font-medium">{persona.job}</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-xs text-gray-500">居住地</div>
-                                            <div className="font-medium">{persona.location}</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-xs text-gray-500">家族</div>
-                                            <div className="font-medium">{persona.family}</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-xs text-gray-500">趣味</div>
-                                            <div className="font-medium">{persona.hobbies?.join('、')}</div>
-                                        </div>
-                                        {persona.personality?.traits && (
-                                            <div className="md:col-span-2">
-                                                <div className="text-xs text-gray-500">性格</div>
-                                                <div className="font-medium">{persona.personality.traits.join('、')}</div>
-                                            </div>
-                                        )}
+                            </div>
+                        </div>
+
+                        {showPersonaInfo && persona && (
+                            <div className="mt-3 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200 fade-in">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <div>
+                                        <div className="text-xs text-gray-500">名前</div>
+                                        <div className="font-medium">{persona.name}</div>
                                     </div>
-                                    {persona.currentSituation && (
-                                        <div className="mt-3 p-3 bg-white rounded">
-                                            <div className="text-xs text-gray-500 mb-1">現在の状況</div>
-                                            <div className="text-sm">{persona.currentSituation}</div>
+                                    <div>
+                                        <div className="text-xs text-gray-500">年齢・性別</div>
+                                        <div className="font-medium">{persona.age}歳 / {persona.gender}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-500">職業</div>
+                                        <div className="font-medium">{persona.job}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-500">居住地</div>
+                                        <div className="font-medium">{persona.location}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-500">家族</div>
+                                        <div className="font-medium">{persona.family}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-500">趣味</div>
+                                        <div className="font-medium">{persona.hobbies?.join('、')}</div>
+                                    </div>
+                                    {persona.personality?.traits && (
+                                        <div className="md:col-span-2">
+                                            <div className="text-xs text-gray-500">性格</div>
+                                            <div className="font-medium">{persona.personality.traits.join('、')}</div>
                                         </div>
                                     )}
                                 </div>
-                                )
-                            )}
-                            
-                            {/* ベスト質問表示 - モバイルでは非表示 */}
-                            {!isMobile && bestQuestions.length > 0 && (
-                                <div className="mt-4 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
-                                    <div className="text-sm font-bold text-purple-700 mb-2">🏆 優秀な質問</div>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                                        {bestQuestions.slice(0, 3).map((q, i) => (
-                                            <div key={i} className="bg-white p-2 rounded text-xs">
-                                                <div className="font-medium text-gray-800 truncate">「{q.question}」</div>
-                                                <div className="text-purple-600 font-bold">{q.score}点</div>
-                                            </div>
-                                        ))}
+                                {persona.currentSituation && (
+                                    <div className="mt-3 p-3 bg-white rounded">
+                                        <div className="text-xs text-gray-500 mb-1">現在の状況</div>
+                                        <div className="text-sm">{persona.currentSituation}</div>
                                     </div>
+                                )}
+                            </div>
+                        )}
+
+                        {bestQuestions.length > 0 && (
+                            <div className="mt-4 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
+                                <div className="text-sm font-bold text-purple-700 mb-2">🏆 優秀な質問</div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                    {bestQuestions.slice(0, 3).map((q, i) => (
+                                        <div key={i} className="bg-white p-2 rounded text-xs">
+                                            <div className="font-medium text-gray-800 truncate">「{q.question}」</div>
+                                            <div className="text-purple-600 font-bold">{q.score}点</div>
+                                        </div>
+                                    ))}
                                 </div>
-                            )}
-                            
-                            {/* リアルタイムヒント - モバイルでは非表示 */}
-                            {!isMobile && questionCount > 2 && scoreHistory.length > 0 && (
-                                <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                                    <div className="text-xs text-blue-800">
-                                        💡 ヒント: 
-                                        {scoreHistory[scoreHistory.length - 1] < 50 ? 
-                                            '「なぜ」「どうして」を使って深掘りしてみましょう' :
-                                         scoreHistory[scoreHistory.length - 1] < 70 ?
-                                            '具体的なエピソードを聞いてみましょう' :
-                                            '素晴らしい質問です！この調子で続けましょう'}
-                                    </div>
+                            </div>
+                        )}
+
+                        {questionCount > 2 && scoreHistory.length > 0 && (
+                            <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                                <div className="text-xs text-blue-800">
+                                    💡 ヒント: 
+                                    {scoreHistory[scoreHistory.length - 1] < 50 ?
+                                        '「なぜ」「どうして」を使って深掘りしてみましょう' :
+                                     scoreHistory[scoreHistory.length - 1] < 70 ?
+                                        '具体的なエピソードを聞いてみましょう' :
+                                        '素晴らしい質問です！この調子で続けましょう'}
                                 </div>
-                            )}
-                        </div>
-                    </div>
-                    
-                    {/* チャットエリア */}
-                    {isMobile ? (
-                        <div className="mobile-chat-wrapper">
-                            <div className="flex-1 bg-[#8eb4cb] overflow-y-auto p-2 min-h-0 mobile-chat-area" ref={chatAreaRef}>
-                                {messages.map((msg, index) => (
-                                <div 
-                                    key={index} 
-                                    className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'} mb-2`}
-                                >
-                                    <div className={`message-bubble ${msg.type === 'system' ? 'ai' : msg.type}`}>
-                                        <div>{msg.content}</div>
-                                    </div>
-                                </div>
-                            ))}
-                            {isTyping && (
-                                <div className="flex justify-start">
-                                    <div className="message-bubble ai flex gap-1 items-center">
-                                        <span className="typing-dot inline-block w-2 h-2 bg-gray-400 rounded-full"></span>
-                                        <span className="typing-dot inline-block w-2 h-2 bg-gray-400 rounded-full"></span>
-                                        <span className="typing-dot inline-block w-2 h-2 bg-gray-400 rounded-full"></span>
-                                    </div>
-                                </div>
-                            )}
-                            <div ref={messagesEndRef} />
-                        </div>
-                    </div>
-                    ) : (
+                            </div>
+                        )}
+
                         <div className="relative flex-1">
-                            <div 
+                            <div
                                 ref={chatAreaRef}
                                 className="h-full overflow-y-auto p-4 bg-gray-50"
                                 onScroll={handleScroll}
                             >
                                 <div className="max-w-4xl mx-auto space-y-3">
                                     {messages.map((msg, index) => (
-                                        <div 
-                                            key={index} 
+                                        <div
+                                            key={index}
                                             className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'} fade-in`}
                                         >
                                             <div className={`message-bubble ${msg.type}`}>
@@ -3317,8 +3403,7 @@ ${conversationHistory}
                                     <div ref={messagesEndRef} />
                                 </div>
                             </div>
-                            
-                            {/* スクロールボタン - ユーザーが上にスクロールした時のみ表示 */}
+
                             {!shouldAutoScroll && (
                                 <button
                                     onClick={scrollToLatest}
@@ -3331,50 +3416,45 @@ ${conversationHistory}
                                 </button>
                             )}
                         </div>
-                    )}
-                    
-                    {/* 入力エリア - モバイルでは下部に固定 */}
-                    <div className={`${isMobile ? 'mobile-input-area' : 'bg-white border-t p-4'}`}>
-                        <div className="max-w-4xl mx-auto">
-                            <div className="flex gap-2">
-                                <input
-                                    ref={inputRef}
-                                    type="text"
-                                    value={currentQuestion}
-                                    onChange={(e) => setCurrentQuestion(e.target.value)}
-                                    onKeyPress={(e) => {
-                                        if (e.key === 'Enter') {
-                                            e.preventDefault();
-                                            handleSubmitQuestion();
-                                        }
-                                    }}
-                                    onFocus={() => {
-                                        // フォーカス時のスクロールは自動スクロール機能に任せる
-                                    }}
-                                    placeholder="質問を入力..."
-                                    disabled={questionCount >= maxQuestions}
-                                    autoComplete="off"
-                                    autoCorrect="off"
-                                    autoCapitalize="off"
-                                    spellCheck="false"
-                                    className={`flex-1 ${isMobile ? 'mobile-input-field' : 'p-3'} border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none transition-colors disabled:bg-gray-100`}
-                                />
-                                <button
-                                    onClick={handleSubmitQuestion}
-                                    disabled={!currentQuestion.trim() || questionCount >= maxQuestions}
-                                    className={`${isMobile ? 'mobile-button px-4' : 'px-6'} py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:from-purple-600 hover:to-pink-600 transition-all transform hover:scale-105`}
-                                >
-                                    送信
-                                </button>
-                            </div>
-                            {comboCount > 0 && (
-                                <div className="mt-2 text-center text-purple-600 font-bold bounce">
-                                    🔥 {comboCount}コンボ！
+
+                        <div className="bg-white border-t p-4">
+                            <div className="max-w-4xl mx-auto">
+                                <div className="flex gap-2">
+                                    <input
+                                        ref={inputRef}
+                                        type="text"
+                                        value={currentQuestion}
+                                        onChange={(e) => setCurrentQuestion(e.target.value)}
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                handleSubmitQuestion();
+                                            }
+                                        }}
+                                        placeholder="質問を入力..."
+                                        disabled={questionCount >= maxQuestions}
+                                        autoComplete="off"
+                                        autoCorrect="off"
+                                        autoCapitalize="off"
+                                        spellCheck="false"
+                                        className="flex-1 p-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none transition-colors disabled:bg-gray-100"
+                                    />
+                                    <button
+                                        onClick={handleSubmitQuestion}
+                                        disabled={!currentQuestion.trim() || questionCount >= maxQuestions}
+                                        className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:from-purple-600 hover:to-pink-600 transition-all transform hover:scale-105"
+                                    >
+                                        送信
+                                    </button>
                                 </div>
-                            )}
+                                {comboCount > 0 && (
+                                    <div className="mt-2 text-center text-purple-600 font-bold bounce">
+                                        🔥 {comboCount}コンボ！
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
                 );
             };
             
