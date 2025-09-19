@@ -881,6 +881,10 @@
         
         // メインアプリコンポーネント
         const InterviewGame = () => {
+            // デバイス検出
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isAndroid = /Android/i.test(navigator.userAgent);
+            
             // ゲーム状態管理
             const [gameState, setGameState] = useState('menu'); // menu, persona, playing, result
             const [currentScore, setCurrentScore] = useState(0);
@@ -1072,7 +1076,7 @@
                     document.removeEventListener('focusin', handleFocusIn);
                     document.removeEventListener('focusout', handleFocusOut);
                 };
-            }, [isMobile, gameState, chatAreaRef, isIOS, isAndroid]);
+            }, [isMobile, gameState, chatAreaRef]);
 
             useEffect(() => {
                 if (typeof window === 'undefined') return;
