@@ -754,20 +754,19 @@
                 top: 0;
                 left: 0;
                 right: 0;
-                bottom: 0;
-                height: 100svh; /* Small Viewport Height - キーボードを考慮 */
+                height: calc(100svh - var(--keyboard-height));
                 display: flex;
                 flex-direction: column;
                 overflow: hidden;
                 background: white;
                 z-index: 1;
+                transition: height 0.2s ease;
             }
             
             /* svhサポートしてないブラウザ用のフォールバック */
             @supports not (height: 100svh) {
                 .mobile-game-container {
-                    height: 100vh;
-                    height: calc(var(--vh, 1vh) * 100);
+                    height: calc(var(--vh, 1vh) * 100 - var(--keyboard-height));
                 }
             }
             
@@ -975,11 +974,15 @@
             });
             const [apiTesting, setApiTesting] = useState(false);
             const [isMobile, setIsMobile] = useState(false);
-            const [keyboardHeight, setKeyboardHeight] = useState(0);
-            const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
-            const [isInputFocused, setIsInputFocused] = useState(false);
-
+            
             const gameLogic = useMemo(() => window.GameLogic || null, []);
+
+            // Refs
+            const messagesEndRef = useRef(null);
+            const inputRef = useRef(null);
+            const chatAreaRef = useRef(null);
+            const initialViewportHeightRef = useRef(typeof window !== 'undefined' ? window.innerHeight : 0);
+            const keyboardHeightRef = useRef(0);
 
             // Show API settings on first load if no API key
             useEffect(() => {
@@ -988,25 +991,21 @@
                 }
             }, []); // Run only on mount
             
-            // Detect mobile device and handle keyboard
+            // Detect mobile device and keep the chat surface visible when the keyboard opens
             useEffect(() => {
+                const updateViewportUnits = () => {
+                    const baseHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+                    const vh = baseHeight * 0.01;
+                    document.documentElement.style.setProperty('--vh', `${vh}px`);
+                    if (keyboardHeightRef.current === 0) {
+                        initialViewportHeightRef.current = window.innerHeight;
+                    }
+                };
+
                 const checkMobile = () => {
                     setIsMobile(window.innerWidth <= 768);
                 };
-                
-                checkMobile();
-                
-                // Set custom viewport height for Android Chrome
-                const setVH = () => {
-                    const vh = window.innerHeight * 0.01;
-                    document.documentElement.style.setProperty('--vh', `${vh}px`);
-                };
-                
-                setVH();
-                window.addEventListener('resize', setVH);
-                window.addEventListener('orientationchange', setVH);
-                
-                // 余白を入力欄に同期
+
                 const syncBottomPadding = () => {
                     if (isMobile && gameState === 'playing') {
                         const inputArea = document.querySelector('.mobile-input-area');
@@ -1017,74 +1016,76 @@
                         }
                     }
                 };
-                
-                // シンプルなViewportハンドリング
-                const handleViewportChange = () => {
-                    // CSS変数のみ更新（フォールバック用）
-                    if (window.visualViewport) {
-                        const vh = window.visualViewport.height * 0.01;
-                        document.documentElement.style.setProperty('--vh', `${vh}px`);
+
+                const updateKeyboardInset = () => {
+                    if (!isMobile || !window.visualViewport) {
+                        if (keyboardHeightRef.current !== 0) {
+                            keyboardHeightRef.current = 0;
+                        }
+                        document.documentElement.style.setProperty('--keyboard-height', '0px');
+                        return;
                     }
-                    
-                    // 余白同期
-                    syncBottomPadding();
-                    
-                    // ⛌ 削除：
-                    // - app.style.bottom = keyboardHeight (Android)
-                    // - app.style.height = visualViewport.height (iOS)
-                    // - 二重補正を起こすコード
+
+                    const vv = window.visualViewport;
+                    const baseline = initialViewportHeightRef.current || window.innerHeight;
+                    const visibleBottom = vv.height + vv.offsetTop;
+                    const inset = Math.max(baseline - visibleBottom, 0);
+                    const normalized = inset < 1 ? 0 : inset;
+
+                    document.documentElement.style.setProperty('--keyboard-height', `${normalized}px`);
+
+                    if (Math.abs(normalized - keyboardHeightRef.current) > 1) {
+                        keyboardHeightRef.current = normalized;
+                    } else if (normalized === 0 && keyboardHeightRef.current !== 0) {
+                        keyboardHeightRef.current = 0;
+                    }
                 };
-                
-                // iOS specific keyboard handling
-                const handleFocusIn = (e) => {
-                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                        setIsInputFocused(true);
-                        // スクロールのみ担保
+
+                const handleViewportChange = () => {
+                    updateViewportUnits();
+                    updateKeyboardInset();
+                    syncBottomPadding();
+                };
+
+                const handleWindowResize = () => {
+                    checkMobile();
+                    handleViewportChange();
+                };
+
+                const handleFocusIn = (event) => {
+                    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
                         setTimeout(() => {
                             if (chatAreaRef.current) {
                                 chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
                             }
-                            syncBottomPadding();
+                            handleViewportChange();
                         }, 50);
                     }
                 };
-                
+
                 const handleFocusOut = () => {
-                    setIsInputFocused(false);
-                    // window.scrollTo(0, 0)の多用を避ける
-                    syncBottomPadding();
+                    setTimeout(() => {
+                        handleViewportChange();
+                    }, 50);
                 };
-                
-                window.addEventListener('resize', () => {
-                    checkMobile();
-                    syncBottomPadding();
-                });
-                
-                // iOS用の安全版translate方式（オプション）
-                if (isIOS && window.visualViewport) {
-                    const vv = window.visualViewport;
-                    const handleVV = () => {
-                        // offsetTopはキーボードぶん上に押し上げられた量
-                        if (vv.offsetTop > 0) {
-                            document.documentElement.style.transform = `translateY(-${vv.offsetTop}px)`;
-                        } else {
-                            document.documentElement.style.transform = '';
-                        }
-                        syncBottomPadding();
-                    };
-                    vv.addEventListener('resize', handleVV);
-                    vv.addEventListener('scroll', handleVV);
-                } else if (window.visualViewport) {
+
+                checkMobile();
+                handleViewportChange();
+
+                window.addEventListener('resize', handleWindowResize);
+                window.addEventListener('orientationchange', handleWindowResize);
+
+                if (window.visualViewport) {
                     window.visualViewport.addEventListener('resize', handleViewportChange);
+                    window.visualViewport.addEventListener('scroll', handleViewportChange);
                 }
-                
+
                 document.addEventListener('focusin', handleFocusIn);
                 document.addEventListener('focusout', handleFocusOut);
-                
+
                 return () => {
-                    window.removeEventListener('resize', checkMobile);
-                    window.removeEventListener('resize', setVH);
-                    window.removeEventListener('orientationchange', setVH);
+                    window.removeEventListener('resize', handleWindowResize);
+                    window.removeEventListener('orientationchange', handleWindowResize);
                     if (window.visualViewport) {
                         window.visualViewport.removeEventListener('resize', handleViewportChange);
                         window.visualViewport.removeEventListener('scroll', handleViewportChange);
@@ -1092,7 +1093,14 @@
                     document.removeEventListener('focusin', handleFocusIn);
                     document.removeEventListener('focusout', handleFocusOut);
                 };
-            }, [isMobile, gameState, chatAreaRef]);
+            }, [isMobile, gameState]);
+
+            useEffect(() => {
+                return () => {
+                    if (typeof window === 'undefined') return;
+                    document.documentElement.style.setProperty('--keyboard-height', '0px');
+                };
+            }, []);
 
             useEffect(() => {
                 if (typeof window === 'undefined') return;
@@ -1120,12 +1128,6 @@
                     console.warn('Failed to persist apiTested flag:', error);
                 }
             }, [apiTested]);
-            
-            // Refs
-            const messagesEndRef = useRef(null);
-            const inputRef = useRef(null);
-            const chatAreaRef = useRef(null);
-            
             // テーマカテゴリー
             const themeCategories = [
                 { id: 'commute', title: '通勤・移動', icon: '🚃' },
