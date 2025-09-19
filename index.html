@@ -620,18 +620,15 @@
             
             /* 入力フィールドをLINE風に */
             .mobile-input-area {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
                 background: #ffffff;
                 border-top: 1px solid #ddd;
                 padding: 8px;
                 padding-bottom: calc(8px + env(safe-area-inset-bottom));
-                z-index: 100;
                 display: flex;
                 align-items: center;
                 gap: 8px;
+                flex: 0 0 auto;
+                min-height: 56px;
             }
             
             .mobile-input-field {
@@ -646,16 +643,12 @@
             
             /* スコア表示を超コンパクトに */
             .mobile-status-bar {
-                position: sticky;
-                top: 0;
-                left: 0;
-                right: 0;
-                z-index: 90;
                 background: white;
-                padding: 4px 8px;
+                padding: 8px;
                 box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-                height: 44px;
                 border-bottom: 1px solid #e5e7eb;
+                flex: 0 0 auto;
+                min-height: 44px;
             }
             
             .mobile-compact-score {
@@ -663,18 +656,16 @@
                 justify-content: space-between;
                 align-items: center;
                 font-size: 11px;
-                height: 100%;
             }
             
             /* チャットエリアの調整 - LINE風 */
             .mobile-chat-area {
-                flex: 1;
                 background: #8eb4cb; /* LINE風の背景色 */
-                padding: 8px !important;
-                padding-top: 44px !important; /* ヘッダーの高さ分の余白 */
-                padding-bottom: 60px !important; /* 入力エリアの高さ分の余白 */
+                padding: 8px;
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
+                min-height: 0;
+                flex: 1 1 auto;
             }
             
             /* ペルソナ情報をコンパクトに */
@@ -738,8 +729,20 @@
             }
             
             /* キーボード表示時の調整用 */
+            .keyboard-visible {
+                --keyboard-height: 0px;
+            }
+            
             .keyboard-visible .mobile-chat-area {
-                padding-bottom: 70px !important;
+                /* キーボード高さ分だけチャットエリアを縮小 */
+                max-height: calc(100vh - var(--keyboard-height) - 100px);
+            }
+            
+            /* iOSキーボード対応 */
+            @supports (height: 100dvh) {
+                .keyboard-visible .flex-1 {
+                    max-height: calc(100dvh - var(--keyboard-height) - 100px);
+                }
             }
             
             /* スクロール最適化 */
@@ -933,6 +936,7 @@
             const [apiTesting, setApiTesting] = useState(false);
             const [isMobile, setIsMobile] = useState(false);
             const [keyboardHeight, setKeyboardHeight] = useState(0);
+            const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
             const [isInputFocused, setIsInputFocused] = useState(false);
 
             const gameLogic = useMemo(() => window.GameLogic || null, []);
@@ -971,8 +975,17 @@
                         // Add class when keyboard is visible
                         if (keyboardHeight > 50) {
                             document.body.classList.add('keyboard-visible');
+                            // Dynamically adjust chat area height
+                            const root = document.getElementById('root');
+                            if (root && isMobile) {
+                                root.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+                            }
                         } else {
                             document.body.classList.remove('keyboard-visible');
+                            const root = document.getElementById('root');
+                            if (root && isMobile) {
+                                root.style.setProperty('--keyboard-height', '0px');
+                            }
                         }
                     }
                 };
@@ -981,8 +994,13 @@
                 const handleFocusIn = (e) => {
                     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                         setIsInputFocused(true);
-                        // スクロール位置は自動スクロール機能に任せる
-                        // キーボード表示時の強制スクロールを削除
+                        // キーボード表示時、ビューポートを調整
+                        setTimeout(() => {
+                            if (window.visualViewport && isMobile) {
+                                const vh = window.visualViewport.height;
+                                setViewportHeight(vh);
+                            }
+                        }, 300);
                     }
                 };
                 
@@ -2289,6 +2307,12 @@ ${conversationHistory}
                 setTalkMeter(0);
                 setMood('normal');
                 
+                // 初期メッセージを設定
+                setMessages([{
+                    type: 'system',
+                    content: `こんにちは！${persona.name}さんの「${persona.painPoints?.[0] || '困りごと'}」について話を聞かせてください。`
+                }]);
+                
                 window.gameStartTime = Date.now();
                 
                 // ペインポイントを自然な表現に変換
@@ -2318,11 +2342,13 @@ ${conversationHistory}
                     return cleaned;
                 })();
                 
-                setMessages([{
+                const initialMessage = {
                     type: 'ai',
                     content: `こんにちは！${persona.name}です。今日はお時間をいただきありがとうございます。実は最近、${naturalPainPoint}で少し悩んでいて...。何かアドバイスをいただけたら嬉しいです。よろしくお願いします！`,
                     timestamp: new Date()
-                }]);
+                };
+                console.log('Setting initial message:', initialMessage);
+                setMessages([initialMessage]);
                 setScoreHistory([]);
                 setInsights([]);
                 setBestQuestions([]);
@@ -2350,7 +2376,7 @@ ${conversationHistory}
                 setQuestionCount(0);
                 setTalkMeter(0);
                 setMood('normal');
-                setMessages([]);
+                setMessages([]); // Reset messages for new game
                 setCurrentQuestion('');
                 setScoreHistory([]);
                 setInsights([]);
@@ -2920,9 +2946,11 @@ ${conversationHistory}
             
             // ゲーム画面
             const renderGame = () => {
+                console.log('renderGame - messages:', messages);
+                console.log('renderGame - messages length:', messages.length);
                 return (
-                <div className={`${isMobile ? 'h-screen flex flex-col overflow-hidden' : 'min-h-screen flex flex-col'}`}>
-                    {/* ステータスバー - モバイルでは上部に固定 */}
+                <div className={`${isMobile ? 'flex flex-col h-screen overflow-hidden' : 'min-h-screen flex flex-col'}`} style={isMobile ? {height: `${window.visualViewport ? window.visualViewport.height : window.innerHeight}px`} : {}}>
+                    {/* ステータスバー */}
                     <div className={`bg-white ${isMobile ? 'mobile-status-bar' : 'shadow-lg p-4'}`}>
                         <div className="max-w-6xl mx-auto">
                             <div className={isMobile ? 'mobile-compact-score' : 'grid grid-cols-2 md:grid-cols-4 gap-4'}>
@@ -3164,25 +3192,17 @@ ${conversationHistory}
                     </div>
                     
                     {/* チャットエリア */}
-                    <div className={`${isMobile ? 'flex-1 overflow-hidden relative' : 'relative flex-1'}`}>
-                        <div 
-                            ref={chatAreaRef}
-                            className={`${isMobile ? 'absolute inset-0 mobile-chat-area' : 'h-full overflow-y-auto p-4 bg-gray-50'}`}
-                            onScroll={handleScroll}
-                        >
-                        <div className="max-w-4xl mx-auto space-y-3">
+                    {isMobile ? (
+                        <div className="flex-1 bg-[#8eb4cb] overflow-y-auto p-2 min-h-0" ref={chatAreaRef} style={{
+                            maxHeight: keyboardHeight > 0 ? `calc(100vh - ${keyboardHeight}px - 100px)` : 'auto'
+                        }}>
                             {messages.map((msg, index) => (
                                 <div 
                                     key={index} 
-                                    className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'} fade-in`}
+                                    className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'} mb-2`}
                                 >
-                                    <div className={`message-bubble ${msg.type}`}>
+                                    <div className={`message-bubble ${msg.type === 'system' ? 'ai' : msg.type}`}>
                                         <div>{msg.content}</div>
-                                        {msg.score !== undefined && (
-                                            <div className="mt-2 text-xs opacity-70">
-                                                スコア: {msg.score}点
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
                             ))}
@@ -3197,21 +3217,56 @@ ${conversationHistory}
                             )}
                             <div ref={messagesEndRef} />
                         </div>
-                        </div>
-                        
-                        {/* スクロールボタン - ユーザーが上にスクロールした時のみ表示 */}
-                        {!shouldAutoScroll && (
-                            <button
-                                onClick={scrollToLatest}
-                                className="absolute bottom-4 right-4 bg-purple-500 text-white p-3 rounded-full shadow-lg hover:bg-purple-600 transition-all transform hover:scale-110 animate-bounce"
-                                aria-label="最新のメッセージへ"
+                    ) : (
+                        <div className="relative flex-1">
+                            <div 
+                                ref={chatAreaRef}
+                                className="h-full overflow-y-auto p-4 bg-gray-50"
+                                onScroll={handleScroll}
                             >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                                </svg>
-                            </button>
-                        )}
-                    </div>
+                                <div className="max-w-4xl mx-auto space-y-3">
+                                    {messages.map((msg, index) => (
+                                        <div 
+                                            key={index} 
+                                            className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'} fade-in`}
+                                        >
+                                            <div className={`message-bubble ${msg.type}`}>
+                                                <div>{msg.content}</div>
+                                                {msg.score !== undefined && (
+                                                    <div className="mt-2 text-xs opacity-70">
+                                                        スコア: {msg.score}点
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {isTyping && (
+                                        <div className="flex justify-start">
+                                            <div className="message-bubble ai flex gap-1 items-center">
+                                                <span className="typing-dot inline-block w-2 h-2 bg-gray-400 rounded-full"></span>
+                                                <span className="typing-dot inline-block w-2 h-2 bg-gray-400 rounded-full"></span>
+                                                <span className="typing-dot inline-block w-2 h-2 bg-gray-400 rounded-full"></span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div ref={messagesEndRef} />
+                                </div>
+                            </div>
+                            
+                            {/* スクロールボタン - ユーザーが上にスクロールした時のみ表示 */}
+                            {!shouldAutoScroll && (
+                                <button
+                                    onClick={scrollToLatest}
+                                    className="absolute bottom-4 right-4 bg-purple-500 text-white p-3 rounded-full shadow-lg hover:bg-purple-600 transition-all transform hover:scale-110 animate-bounce"
+                                    aria-label="最新のメッセージへ"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                    </svg>
+                                </button>
+                            )}
+                        </div>
+                    )}
                     
                     {/* 入力エリア - モバイルでは下部に固定 */}
                     <div className={`${isMobile ? 'mobile-input-area' : 'bg-white border-t p-4'}`}>
