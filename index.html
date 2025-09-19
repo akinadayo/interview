@@ -640,6 +640,7 @@
                 height: var(--mobile-vh, 100dvh);
                 background: linear-gradient(160deg, #f3f4f6 0%, #dde8ff 100%);
                 z-index: 1;
+                overflow: hidden;
             }
 
             @supports (height: 100dvh) {
@@ -1137,6 +1138,36 @@
                     vv?.removeEventListener('scroll', applyViewportSizing);
                     document.removeEventListener('focusin', handleFocusIn);
                     document.removeEventListener('focusout', handleFocusOut);
+                };
+            }, [isMobile, gameState]);
+
+            useEffect(() => {
+                if (typeof document === 'undefined') return;
+
+                const html = document.documentElement;
+                const body = document.body;
+                const prevBodyOverflow = body.style.overflow;
+                const prevHtmlOverflow = html.style.overflow;
+                const prevOverscroll = html.style.overscrollBehavior;
+                const prevTouchAction = html.style.touchAction;
+
+                if (isMobile && gameState === 'playing') {
+                    body.style.overflow = 'hidden';
+                    html.style.overflow = 'hidden';
+                    html.style.overscrollBehavior = 'contain';
+                    html.style.touchAction = 'manipulation';
+                } else {
+                    body.style.overflow = '';
+                    html.style.overflow = '';
+                    html.style.overscrollBehavior = '';
+                    html.style.touchAction = '';
+                }
+
+                return () => {
+                    body.style.overflow = prevBodyOverflow;
+                    html.style.overflow = prevHtmlOverflow;
+                    html.style.overscrollBehavior = prevOverscroll;
+                    html.style.touchAction = prevTouchAction;
                 };
             }, [isMobile, gameState]);
 
