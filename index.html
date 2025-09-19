@@ -554,7 +554,7 @@
         }
         
         .message-bubble.user {
-            background: #00B900;
+            background: #7CB342; /* LINE風の緑 */
             color: white;
             margin-left: auto;
             border-bottom-right-radius: 4px;
@@ -622,16 +622,16 @@
             .mobile-input-area {
                 position: fixed;
                 bottom: 0;
-                bottom: env(safe-area-inset-bottom);
                 left: 0;
                 right: 0;
                 background: #ffffff;
-                border-top: 1px solid #e5e7eb;
-                padding: 6px 8px;
-                padding-bottom: calc(6px + env(safe-area-inset-bottom));
+                border-top: 1px solid #ddd;
+                padding: 8px;
+                padding-bottom: calc(8px + env(safe-area-inset-bottom));
                 z-index: 100;
-                transform: translateZ(0);
-                -webkit-transform: translateZ(0);
+                display: flex;
+                align-items: center;
+                gap: 8px;
             }
             
             .mobile-input-field {
@@ -665,12 +665,23 @@
                 height: 100%;
             }
             
-            /* チャットエリアの調整 */
+            /* チャットエリアの調整 - LINE風 */
             .mobile-chat-area {
-                padding-top: 40px !important; /* ステータスバー分の余白 */
-                padding-bottom: 70px !important; /* 入力エリア分の余白 */
-                padding-left: 8px !important;
-                padding-right: 8px !important;
+                flex: 1;
+                background: #8eb4cb; /* LINE風の背景色 */
+                padding: 8px !important;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                /* キーボード表示時の高さ調整 */
+                height: calc(100vh - 120px); /* ヘッダーと入力エリアを引く */
+                height: calc(100dvh - 120px); /* 動的ビューポート対応 */
+            }
+            
+            /* キーボード表示時の調整 */
+            @supports (height: 100dvh) {
+                .mobile-chat-area {
+                    height: calc(100dvh - 120px);
+                }
             }
             
             /* ペルソナ情報をコンパクトに */
@@ -2917,9 +2928,9 @@ ${conversationHistory}
             // ゲーム画面
             const renderGame = () => {
                 return (
-                <div className={`min-h-screen flex flex-col ${isMobile ? 'mobile-viewport' : ''}`}>
+                <div className={`${isMobile ? 'fixed inset-0 flex flex-col' : 'min-h-screen flex flex-col'}`}>
                     {/* ステータスバー */}
-                    <div className={`bg-white shadow-lg ${isMobile ? 'mobile-status-bar' : 'p-4'}`}>
+                    <div className={`bg-white ${isMobile ? 'mobile-status-bar flex-shrink-0' : 'shadow-lg p-4'}`}>
                         <div className="max-w-6xl mx-auto">
                             <div className={isMobile ? 'mobile-compact-score' : 'grid grid-cols-2 md:grid-cols-4 gap-4'}>
                                 {isMobile ? (
