@@ -1329,7 +1329,7 @@ Respond with JSON:
                     }
                     
                     // All retries failed
-                    const errorMsg = apiModel === 'openrouter/sonoma-sky-alpha'
+                    const errorMsg = apiModel === 'x-ai/grok-4-fast:free'
                         ? 'Sonoma Sky Alphaの接続に失敗しました。他のモデルをお試しください。'
                         : 'お題の生成に失敗しました。もう一度お試しください。';
                     showToast(errorMsg, 'error');
